@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import org.guidevtools.SwingUtil.RtnTop;
@@ -81,13 +82,18 @@ public class GUIComponentWatcher extends JFrame{
 					
 					newSelectedBound = bound;
 					
-					updateSelect(top.getComponent());
-					updateTopComponentDetail(top.getComponent());
+					SwingUtilities.invokeLater(() -> {
+						updateSelect(top.getComponent());
+						updateTopComponentDetail(top.getComponent());
+					});
 				}
+				
 				if(lastSelectedBound != null){//关闭了watch后要清理之前留下的痕迹（如果有）
-					Graphics g = watchObject.getGraphics();
-					g.setColor(watchObject.getBackground());
-					g.drawRect(lastSelectedBound.x, lastSelectedBound.y, lastSelectedBound.width, lastSelectedBound.height);
+					SwingUtilities.invokeLater(() -> {
+						Graphics g = watchObject.getGraphics();
+						g.setColor(watchObject.getBackground());
+						g.drawRect(lastSelectedBound.x, lastSelectedBound.y, lastSelectedBound.width, lastSelectedBound.height);
+					});
 				}
 			}).start();
 		});
@@ -125,7 +131,12 @@ public class GUIComponentWatcher extends JFrame{
 	private void updateTopComponentDetail(Component component) {
 		List<NameValuePair> list = new ArrayList<>();
 		list.add(new NameValuePair("type", component.getClass().getSimpleName()));
-		list.add(new NameValuePair("bounds", component.getBounds().toString()));
+		list.add(new NameValuePair("parent", component.getParent()));
+		list.add(new NameValuePair("x", component.getBounds().getX()));
+		list.add(new NameValuePair("y", component.getBounds().getY()));
+		list.add(new NameValuePair("width", component.getBounds().getWidth()));
+		list.add(new NameValuePair("height", component.getBounds().getHeight()));
+		
 		int row = list.size();
 		Object[][] values = new Object[row][2];
 		for(int i = 0; i < row; i++){
@@ -138,9 +149,9 @@ public class GUIComponentWatcher extends JFrame{
 	
 	private class NameValuePair{
 		private String name;
-		private String value;
+		private Object value;
 		
-		public NameValuePair(String name, String value) {
+		public NameValuePair(String name, Object value) {
 			this.name = name;
 			this.value = value;
 		}
@@ -149,7 +160,7 @@ public class GUIComponentWatcher extends JFrame{
 			return name;
 		}
 
-		public String getValue() {
+		public Object getValue() {
 			return value;
 		}
 	}
